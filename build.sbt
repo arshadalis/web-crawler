@@ -11,6 +11,7 @@ lazy val root = (project in file("."))
   val akkaVersion = "2.6.19"
 
   libraryDependencies ++= Seq(
+    "org.jsoup" % "jsoup" % "1.15.1",
     "com.typesafe.akka" %% "akka-actor" % akkaVersion,
     "com.typesafe.akka" %% "akka-testkit" % akkaVersion,
     "org.scalatest" %% "scalatest" % "3.2.12"
