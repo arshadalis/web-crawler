@@ -1,12 +1,10 @@
 package crawler.core.domain
 
-import crawler.core.domain.error.CrawlerErrors.{ErrorMessage, InvalidWebPage, ScrapingError}
+import crawler.core.domain.error.CrawlerErrors.{ErrorMessage, NoMeaningFulData, ScrapingError}
 import org.jsoup.nodes.Document
-import org.jsoup.select.Elements
 
-import scala.collection.JavaConverters._
 import java.lang
-import scala.reflect.internal.Variance.Extractor
+import scala.collection.JavaConverters._
 
 object Scraper {
 
@@ -19,23 +17,36 @@ object Scraper {
 
       val mayBeTitle = extractNonEmptyString(document, document => document.title()).map(Title)
       val mayBeBody = extractNonEmptyString(document, document => document.body().data()).map(Body)
+      val mayBeHeadings = extractHeadings(document)
+      val mayBeLinks = extractLinks(document)
+      val mayBeMedia = extractMedia(document)
 
-      val mayBeHeadings = extractFromNonEmptyList(
-        extractElements(document, "h[1-6]"),
-        headingTags => Headings(headingTags)
-      )
+      val scrapedData = ScrapedData(mayBeTitle, mayBeBody, mayBeHeadings, mayBeLinks, mayBeMedia)
 
-      val mayBeLinks = extractFromNonEmptyList(
-        extractElements(document, "a[href]"),
-        linksTags => Links(linksTags)
-      )
+      if (scrapedData.isEmpty())
+        Left(NoMeaningFulData(ErrorMessage("No meaningful info like title, headings, links etc. Found.")))
+      else Right(scrapedData)
+    }
 
-      val mayBeMedia = extractFromNonEmptyList(
-        extractElements(document, "[src]"),
+    private def extractMedia(document: Document) = {
+      extractFromNonEmptyList(
+        extractElements(document, document => document.select("[src]").eachAttr("abs:src")),
         mediaTags => Media(mediaTags)
       )
+    }
 
-      Right(ScrapedData(mayBeTitle, mayBeBody, mayBeHeadings, mayBeLinks, mayBeMedia))
+    private def extractLinks(document: Document) = {
+      extractFromNonEmptyList(
+        extractElements(document, document => document.select( "a[href]").eachAttr("abs:href")),
+        linksTags => Links(linksTags)
+      )
+    }
+
+    private def extractHeadings(document: Document) = {
+      extractFromNonEmptyList(
+        extractElements(document,  document => document.select("h0, h1, h2, h3, h4, h5, h6").eachText() ),
+        headingTags => Headings(headingTags)
+      )
     }
 
     private def extractNonEmptyString[T <: lang.String](document: Document, extractor: Document => T) = {
@@ -48,8 +59,9 @@ object Scraper {
       case list => Some(func(list))
     }
 
-    private def extractElements(document: Document, extractorQuery: String) =
-      document.select(extractorQuery).eachText().asScala.toList
+    private def extractElements(document: Document, extractorQuery: Document => java.util.List[String]) = {
+      extractorQuery(document).asScala.toList
+    }
 
 
   }
@@ -60,7 +72,10 @@ object Scraper {
                           headings: Option[Headings],
                           links: Option[Links],
                           media: Option[Media]
-                        )
+                        ) {
+    def isEmpty() = title.isEmpty && body.isEmpty && headings.isEmpty && links.isEmpty && media.isEmpty
+
+  }
 
   case class Title(title: String) extends AnyVal
 

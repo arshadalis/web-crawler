@@ -13,5 +13,6 @@ object CrawlerErrors {
   sealed trait ScrapingError
 
   case class InvalidWebPage(message: ErrorMessage) extends ScrapingError
+  case class NoMeaningFulData(message: ErrorMessage) extends ScrapingError
 
 }
