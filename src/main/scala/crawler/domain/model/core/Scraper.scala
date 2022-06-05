@@ -1,16 +1,37 @@
-package crawler.core.domain
+package crawler.domain.model.core
 
-import crawler.core.domain.error.CrawlerErrors.{ErrorMessage, NoMeaningFulData, ScrapingError}
+import crawler.domain.model.core.error.CrawlerErrors.{ErrorMessage, NoMeaningFulData, ScrapingError}
 import org.jsoup.nodes.Document
+import scala.jdk.CollectionConverters._
 
 import java.lang
-import scala.collection.JavaConverters._
 
 object Scraper {
 
   trait Scraper {
     def scrape(HTMLDocument: Document): Either[ScrapingError, ScrapedData]
   }
+
+  case class ScrapedData(
+                          title: Option[Title],
+                          body: Option[Body],
+                          headings: Option[Headings],
+                          links: Option[Links],
+                          media: Option[Media]
+                        ) {
+
+    def isEmpty() = title.isEmpty && body.isEmpty && headings.isEmpty && links.isEmpty && media.isEmpty
+  }
+
+  case class Title(title: String) extends AnyVal
+
+  case class Body(bodyString: String) extends AnyVal
+
+  case class Headings(headings: List[String]) extends AnyVal
+
+  case class Links(links: List[String]) extends AnyVal
+
+  case class Media(media: List[String]) extends AnyVal
 
   object ScraperImpl extends Scraper {
     override def scrape(document: Document): Either[ScrapingError, ScrapedData] = {
@@ -37,14 +58,14 @@ object Scraper {
 
     private def extractLinks(document: Document) = {
       extractFromNonEmptyList(
-        extractElements(document, document => document.select( "a[href]").eachAttr("abs:href")),
+        extractElements(document, document => document.select("a[href]").eachAttr("abs:href")),
         linksTags => Links(linksTags)
       )
     }
 
     private def extractHeadings(document: Document) = {
       extractFromNonEmptyList(
-        extractElements(document,  document => document.select("h0, h1, h2, h3, h4, h5, h6").eachText() ),
+        extractElements(document, document => document.select("h0, h1, h2, h3, h4, h5, h6").eachText()),
         headingTags => Headings(headingTags)
       )
     }
@@ -65,27 +86,6 @@ object Scraper {
 
 
   }
-
-  case class ScrapedData(
-                          title: Option[Title],
-                          body: Option[Body],
-                          headings: Option[Headings],
-                          links: Option[Links],
-                          media: Option[Media]
-                        ) {
-    def isEmpty() = title.isEmpty && body.isEmpty && headings.isEmpty && links.isEmpty && media.isEmpty
-
-  }
-
-  case class Title(title: String) extends AnyVal
-
-  case class Body(bodyString: String) extends AnyVal
-
-  case class Headings(headings: List[String]) extends AnyVal
-
-  case class Links(links: List[String]) extends AnyVal
-
-  case class Media(media: List[String]) extends AnyVal
 
 
 }

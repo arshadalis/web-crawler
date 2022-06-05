@@ -1,4 +1,4 @@
-package crawler.core.domain.error
+package crawler.domain.model.core.error
 
 object CrawlerErrors {
 
@@ -13,6 +13,7 @@ object CrawlerErrors {
   sealed trait ScrapingError
 
   case class InvalidWebPage(message: ErrorMessage) extends ScrapingError
+
   case class NoMeaningFulData(message: ErrorMessage) extends ScrapingError
 
 }

@@ -1,7 +1,8 @@
-package crawler.core.domain
+package crawler.domain.model
 
-import crawler.core.domain.Scraper.ScrapedData
-import crawler.core.domain.error.CrawlerErrors.{ErrorMessage, NoMeaningFulData, ScrapingError}
+import crawler.domain.model.core.Scraper
+import crawler.domain.model.core.Scraper.ScrapedData
+import crawler.domain.model.core.error.CrawlerErrors.{ErrorMessage, NoMeaningFulData, ScrapingError}
 import org.jsoup.Jsoup
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
