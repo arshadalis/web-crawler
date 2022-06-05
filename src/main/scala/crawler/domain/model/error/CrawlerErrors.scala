@@ -4,15 +4,13 @@ object CrawlerErrors {
 
   case class ErrorMessage(message: String) extends AnyVal
 
-  sealed trait Error {
+  sealed trait CrawlingError {
     val message: ErrorMessage
   }
 
-  sealed trait CrawlingError
+  sealed trait ScrapingError extends CrawlingError
 
-  sealed trait ScrapingError
-
-  case class InvalidWebPage(message: ErrorMessage) extends ScrapingError
+  case class InvalidWebPage(message: ErrorMessage) extends CrawlingError
 
   case class NoMeaningFulData(message: ErrorMessage) extends ScrapingError
 

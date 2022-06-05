@@ -3,13 +3,14 @@ package crawler.domain.model
 import crawler.domain.model.core.Scraper
 import crawler.domain.model.core.Scraper.ScrapedData
 import crawler.domain.model.core.error.CrawlerErrors.{ErrorMessage, NoMeaningFulData, ScrapingError}
+import crawler.domain.model.core.interpreter.ScraperImpl
 import org.jsoup.Jsoup
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatest.{Failed, Succeeded}
 
 class ScraperSpec extends AnyFlatSpec {
-  private val scraperImpl = Scraper.ScraperImpl
+  private val scraperImpl =  ScraperImpl
 
   val mediumBlogUrl = "https://medium.com/kodeyoga/variance-is-not-hard-it-is-extremely-useful-f791b09e1f1c"
   val blogDocument = Jsoup.connect(mediumBlogUrl).get()
