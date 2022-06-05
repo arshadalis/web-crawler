@@ -1,12 +1,11 @@
 package crawler.core.domain
 
 import crawler.core.domain.Scraper.ScrapedData
-import crawler.core.domain.error.CrawlerErrors.{ErrorMessage, InvalidWebPage, NoMeaningFulData, ScrapingError}
+import crawler.core.domain.error.CrawlerErrors.{ErrorMessage, NoMeaningFulData, ScrapingError}
 import org.jsoup.Jsoup
-import org.jsoup.nodes.Document
-import org.scalatest.{Failed, Succeeded}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.{Failed, Succeeded}
 
 class ScraperSpec extends AnyFlatSpec {
   private val scraperImpl = Scraper.ScraperImpl
@@ -32,17 +31,32 @@ class ScraperSpec extends AnyFlatSpec {
   }
 
   it should "scrape Headings from the page" in {
-    val assertionResult = scrapedData.fold(_ => Failed, scrapedData => scrapedData.headings.get.headings.nonEmpty)
+    val someExpectedHeadings = List("Variance is not hard and it’s extremely useful", "Subtyping", "Generics", "More from kodeyoga")
+
+    val assertionResult = scrapedData.fold(
+      _ => false,
+      scrapedData => someExpectedHeadings.forall(expected => scrapedData.headings.get.headings.contains(expected)))
+
     assertionResult shouldEqual true
   }
 
   it should "scrape Links from the page" in {
-    val assertionResult = scrapedData.fold(_ => Failed, scrapedData => scrapedData.links.get.links.nonEmpty)
+    val someExpectedLinks = List("https://policy.medium.com/medium-terms-of-service-9db0094a1e0f")
+
+    val assertionResult = scrapedData.fold(
+      _ => Failed,
+      scrapedData => someExpectedLinks.forall(expectedLink => scrapedData.links.get.links.contains(expectedLink)) )
+
     assertionResult shouldEqual true
   }
 
   it should "scrape Media from the page" in {
-    val assertionResult = scrapedData.fold(_ => Failed, scrapedData => scrapedData.media.get.media.nonEmpty)
+    val someExpectedMedia = List("https://miro.medium.com/fit/c/96/96/1*NXV_UAJPkLPBbeg2FBg1hw.jpeg")
+
+    val assertionResult = scrapedData.fold(
+      _ => Failed,
+      scrapedData => someExpectedMedia.forall(expected => scrapedData.media.get.media.contains(expected))
+    )
     assertionResult shouldEqual true
   }
 }
