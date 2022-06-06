@@ -1,8 +1,11 @@
 package crawler.repo
 
+
 import crawler.domain.model.core.{CrawlingResult, Url}
-import crawler.domain.model.core.error.CrawlerErrors.CrawlingError
+
+import scala.concurrent.Future
 
 trait CrawlerService {
-  def crawlFor(urls: List[Url]): Either[CrawlingError, CrawlingResult]
+
+  def crawlFor(urls: Set[Url]): Future[ List[CrawlingResult]]
 }
