@@ -18,7 +18,7 @@ object CrawlerImpl extends Crawler {
 
   private def extractDocument(url: Url) = {
     Try {
-      Jsoup.connect(url.linkString).get()
+      Jsoup.connect(url.urlString).get()
     }.fold(error => Left(InvalidWebPage(ErrorMessage(s"Crawling error, Error: ${error.getMessage}"))),
       document => Right(document))
 

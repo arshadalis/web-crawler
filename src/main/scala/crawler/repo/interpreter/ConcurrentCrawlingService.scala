@@ -1,31 +1,45 @@
 package crawler.repo.interpreter
 
-
-import akka.actor.typed.ActorSystem
+import akka.actor.typed.ActorRef
+import akka.actor.typed.scaladsl.Behaviors
 import akka.util.Timeout
-import crawler.domain.model.core.{CrawlingResult, Url}
-import crawler.repo.CrawlerService
-import crawler.repo.interpreter.CrawlerActor.Crawl
+import crawler.domain.model.core.Url
+import crawler.repo.interpreter.CrawlerActor.{Crawl, CrawledReply}
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
-object ConcurrentCrawlingService extends CrawlerService {
+object ConcurrentCrawlingService {
 
-  val actorSystem: ActorSystem[CrawlerActor.Crawl] = ActorSystem(CrawlerActor(), "concurrentWebCrawler")
+  case class StartCrawling(urls: Set[Url], replyTo: ActorRef[Future[CrawlingDone]])
+
+  case class CrawlingDone(crawledData: List[CrawledReply])
+
+  def apply(): Behaviors.Receive[StartCrawling] = Behaviors.receive { (context, messageUrlAndActor) =>
 
 
-  override def crawlFor(urls: Set[Url]): Future[ List[CrawlingResult]] = {
+    implicit val scheduler = context.system.scheduler
+    implicit val executionContext = context.executionContext
     import akka.actor.typed.scaladsl.AskPattern._
-    implicit val ec = scala.concurrent.ExecutionContext.global
+    implicit val timeout: Timeout = 3 seconds
 
-    implicit val timeout: Timeout = 5 seconds
-    implicit val scheduler = actorSystem.scheduler
+    context.log.info(s"Got set of urls ${messageUrlAndActor.urls}")
+
+    val allCrawledReplies = messageUrlAndActor.urls.map(
+      url => {
+        val target = context.spawn(CrawlerActor(), s"${url.urlString}-crawler")
+        target.ask(ref => Crawl(url, ref))
+      }
+    ).toList
+
+    val result = Future.sequence(allCrawledReplies).map(crawledData => CrawlingDone(crawledData))
+
+    messageUrlAndActor.replyTo ! result
 
 
-    Future.sequence(
-      urls.map(url => actorSystem.ask(ref => Crawl(url, ref))).toList
-    ).map(_.map(a => a.crawlingResult))
+    Behaviors.same
   }
+
+
 }
